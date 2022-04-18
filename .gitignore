@@ -1,0 +1,4 @@
+/node_modules
+/.smake
+/*.tar.xz
+/.ninja_log
