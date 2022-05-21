@@ -2,3 +2,8 @@
 /.smake
 /*.tar.xz
 /.ninja_log
+/ubuntu*.*
+/crosstools-ng
+/smake
+/musl
+/alpine
