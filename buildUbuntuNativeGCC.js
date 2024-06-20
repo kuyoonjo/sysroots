@@ -5,7 +5,6 @@ const { join } = require('path');
 
 
 const version = process.argv[2];
-const gccVersion = process.argv[3];
 const vendor = 'ubuntu' + version;
 const res = execSync(`docker buildx imagetools inspect ubuntu:${version} --raw`, { stdio: 'pipe' }).toString();
 const info = JSON.parse(res);
@@ -47,20 +46,15 @@ mkdirSync(vendor, { recursive: true });
 
 const dockerFileTemplate = `FROM docker.io/library/ubuntu:{{version}}@{{sha256}}
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && \\
-apt-get install -y software-properties-common && \\
-apt-get update && \\
-add-apt-repository -y ppa:ubuntu-toolchain-r/test && \\
-apt-get update && \\
-apt-get install -y gcc-{{gccVersion}} g++-{{gccVersion}} libdbus-1-dev libtar-dev zlib1g-dev liblz4-dev liblzma-dev libssl-dev libcurl4-openssl-dev`;
+RUN apt-get update
+RUN apt-get install -y gcc g++ libdbus-1-dev libtar-dev zlib1g-dev liblz4-dev liblzma-dev libssl-dev libcurl4-openssl-dev`;
 
 for (const m of info.manifests) {
     const t = triple(m);
     if (t.startsWith('aarch64')) {
     console.log('Build ' + t);
     const dockerFile = dockerFileTemplate.replaceAll('{{version}}', version)
-        .replaceAll('{{sha256}}', m.digest)
-        .replaceAll('{{gccVersion}}', gccVersion);
+        .replaceAll('{{sha256}}', m.digest);
     const dockerFilePath = `${vendor}/${t}.Dockerfile`;
     writeFileSync(dockerFilePath, dockerFile);
     execSync(`docker build -t ${t} -f ${t}.Dockerfile .`, { stdio: 'inherit', cwd: vendor });
